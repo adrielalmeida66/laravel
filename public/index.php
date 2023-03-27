@@ -1,55 +1,119 @@
-<?php
+<?php 
+include('config.php');
+if(isset($_POST['email']) && isset($_POST['senha'])) {
 
-use Illuminate\Contracts\Http\Kernel;
-use Illuminate\Http\Request;
+    if(strlen($_POST['email']) == 0){
+        echo "Preencha seu e-mail";
+    } else if(strlen($_POST['senha']) == 0){
+        echo "Preencha sua senha";
+    } else{
 
-define('LARAVEL_START', microtime(true));
+        $email = $mysqli->real_escape_string($_POST['email']);
+        $senha = $mysqli->real_escape_string($_POST['senha']);
 
-/*
-|--------------------------------------------------------------------------
-| Check If Application Is Under Maintenance
-|--------------------------------------------------------------------------
-|
-| If the application is maintenance / demo mode via the "down" command we
-| will require this file so that any prerendered template can be shown
-| instead of starting the framework, which could cause an exception.
-|
-*/
+        $sql_code = "SELECT * FROM logins WHERE email = '$email'AND senha = '$senha'";
+        $sql_query = $mysqli->query($sql_code) or die("Falha na execução do codigo sql" . $mysqli->error);
 
-if (file_exists(__DIR__.'/../storage/framework/maintenance.php')) {
-    require __DIR__.'/../storage/framework/maintenance.php';
+        $quantidade = $sql_query->num_rows;
+
+        if( $quantidade == 1){  
+
+            $usuario = $sql_query->fetch_assoc();
+
+                if(!isset($_SESSION)){
+                    session_start();
+                }
+                $_SESSION['id'] = $usuario['id'];
+                header("Location: incio.php");
+
+
+        } else{
+            echo "Falha ao logar! Email ou senha incorretos";
+        }
+
+    }
+
+
 }
 
-/*
-|--------------------------------------------------------------------------
-| Register The Auto Loader
-|--------------------------------------------------------------------------
-|
-| Composer provides a convenient, automatically generated class loader for
-| this application. We just need to utilize it! We'll simply require it
-| into the script here so we don't need to manually load our classes.
-|
-*/
 
-require __DIR__.'/../vendor/autoload.php';
+?>
 
-/*
-|--------------------------------------------------------------------------
-| Run The Application
-|--------------------------------------------------------------------------
-|
-| Once we have the application, we can handle the incoming request using
-| the application's HTTP kernel. Then, we will send the response back
-| to this client's browser, allowing them to enjoy our application.
-|
-*/
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Page</title>
+    <style>
+        /* Define a fonte usada em todo o documento e adiciona um fundo gradiente */
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background-color:#000000;
+        }
 
-$app = require_once __DIR__.'/../bootstrap/app.php';
+        /* Define o estilo do formulário de login */
+        #login-form {
+            background-color:  rgba(102, 185, 45);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 80px;
+            border-radius: 15px;
+            color: white;
+        }
 
-$kernel = $app->make(Kernel::class);
+        /* Define o estilo dos campos de entrada */
+        input {
+            padding: 15px;
+            border: none;
+            outline: none;
+            font-size: 15px;
+        }
 
-$response = tap($kernel->handle(
-    $request = Request::capture()
-))->send();
+        /* Define o estilo do botão de envio */
+        .submit-button {
+            background-color: black;
+            border: none;
+            padding: 15px;
+            width: 100%;
+            border-radius: 10px;
+            color: white;
+            font-size: 15px;
+            cursor: pointer;
+        }
 
-$kernel->terminate($request, $response);
+        /* Define o estilo do botão de envio quando o mouse passa sobre ele */
+        .submit-button:hover {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+
+        /* Define o estilo do link "cadastro" */
+        #signup-link {
+            display: block;
+            text-align: center;
+            color: white;
+            margin-top: 20px;
+        }
+
+        /* Define o estilo do link "cadastro" quando o mouse passa sobre ele */
+        #signup-link:hover {
+            color:rgba(102, 185, 51);
+        }
+    </style>
+</head>
+<body>
+    <div id="login-form">
+        <form method="POST" action="inicio.php"> 
+            <input type="text" name="email" placeholder="Email" required>
+            <br><br>
+            <input type="password" name="senha" placeholder="Senha" required>
+            <br><br>
+            <input class="submit-button" type="submit" name="submit" value="Enviar">
+        </form>         
+    </div>
+    <a href="cadastrologin.php" id="signup-link">Cadastre-se</a>
+</body>
+</html>
